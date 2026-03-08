@@ -245,7 +245,10 @@ namespace XcelerateLinks.Mvc.Controllers
             var client = CreateAuthorizedClient();
             var resp = await client.DeleteAsync($"api/opportunities/{id}");
             if (!resp.IsSuccessStatusCode)
+            {
+                TempData["DeleteError"] = await SafeReadStringAsync(resp) ?? "Não foi possível eliminar a oportunidade.";
                 return RedirectToAction(nameof(Delete), new { id });
+            }
 
             return RedirectToAction(nameof(Index));
         }

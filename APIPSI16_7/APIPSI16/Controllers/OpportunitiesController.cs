@@ -184,16 +184,54 @@ namespace APIPSI16.Controllers
         }
 
         // DELETE: api/Opportunities/5
-        // Only admins can delete opportunities
+        // Admins can delete any opportunity; employers can delete opportunities for their company
         [HttpDelete("{id}")]
-        [Authorize(Roles = "0")] // Admin only
+        [Authorize(Roles = "0,2")] // Admin or Employer
         public async Task<IActionResult> DeleteOpportunity(int id)
         {
             var opportunity = await _context.Opportunities.FindAsync(id);
             if (opportunity == null) return NotFound();
 
+            var currentUserId = GetCurrentUserId();
+            var userRole = GetCurrentUserRole();
+
+            // Employers can only delete opportunities for companies they are active members of (role >= 1)
+            if (userRole == "2")
+            {
+                if (!opportunity.CompanyId.HasValue || !currentUserId.HasValue)
+                    return StatusCode(403, "Não tens permissão para eliminar esta vaga.");
+
+                var member = await _context.CompanyMembers
+                    .FirstOrDefaultAsync(cm => cm.CompanyId == opportunity.CompanyId.Value && cm.UserId == currentUserId.Value);
+
+                if (member == null || member.Role < 1)
+                    return StatusCode(403, "Não tens permissão para eliminar vagas desta empresa.");
+            }
+
+            // Remove related job applications first (non-nullable FK – no cascade in DB)
+            var applications = await _context.JobApplications
+                .Where(a => a.OpportunityId == id)
+                .ToListAsync();
+            _context.JobApplications.RemoveRange(applications);
+
+            // Null out EmployerCandidateHistory references (nullable FK)
+            var histories = await _context.EmployerCandidateHistories
+                .Where(h => h.OpportunityId == id)
+                .ToListAsync();
+            foreach (var h in histories)
+                h.OpportunityId = null;
+
             _context.Opportunities.Remove(opportunity);
-            await _context.SaveChangesAsync();
+
+            try
+            {
+                await _context.SaveChangesAsync();
+            }
+            catch (DbUpdateException ex)
+            {
+                _logger.LogError(ex, "Failed to delete opportunity {Id}", id);
+                return StatusCode(500, "Erro ao eliminar a oportunidade. Tenta novamente.");
+            }
 
             return NoContent();
         }
