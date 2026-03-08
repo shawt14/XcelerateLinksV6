@@ -312,7 +312,7 @@ namespace APIPSI16.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("EmployerCandidateHistories");
+                    b.ToTable("EmployerCandidateHistory");
                 });
 
             modelBuilder.Entity("APIPSI16.Models.InterviewRound", b =>

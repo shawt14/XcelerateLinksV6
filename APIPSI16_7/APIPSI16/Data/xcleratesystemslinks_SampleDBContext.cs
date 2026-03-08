@@ -222,6 +222,12 @@ public partial class xcleratesystemslinks_SampleDBContext : DbContext
         });
 
 
+        modelBuilder.Entity<EmployerCandidateHistory>(entity =>
+        {
+            entity.HasKey(e => e.EmployerCandidateHistoryId).HasName("PK__Employer__7ED6A363F8F4F90F");
+            entity.ToTable("EmployerCandidateHistory");
+        });
+
         modelBuilder.Entity<JobApplication>(entity =>
         {
             entity.HasKey(e => e.JobApplicationId).HasName("PK__JobApplications__JobApplicationId");
