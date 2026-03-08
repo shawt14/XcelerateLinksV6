@@ -285,6 +285,10 @@ namespace APIPSI16.Migrations
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime2");
 
+                    b.Property<bool>("IsDiscarded")
+                        .HasDefaultValue(false)
+                        .HasColumnType("bit");
+
                     b.Property<DateTime>("LastContactAt")
                         .HasColumnType("datetime2");
 
@@ -297,6 +301,9 @@ namespace APIPSI16.Migrations
                     b.Property<string>("Outcome")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
+
+                    b.Property<int?>("PriorityId")
+                        .HasColumnType("int");
 
                     b.Property<string>("StageReached")
                         .HasColumnType("nvarchar(max)");
